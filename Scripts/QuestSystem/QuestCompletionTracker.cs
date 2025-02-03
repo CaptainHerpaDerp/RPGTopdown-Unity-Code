@@ -55,16 +55,13 @@ namespace QuestSystem
             foreach (OngoingQuest ongoingQuest in ongoingQuests)
             {
                 // Go through all of the conditions in the quest, if any have the same dialogueID, mark them as complete
-
-                foreach (var condition in ongoingQuest.completedQuestConditions.Keys.ToList())
+                if (ongoingQuest.ContainConditionVariable(dialogueID))
                 {
-                    if (condition == dialogueID)
-                    {
-                        ongoingQuest.completedQuestConditions[condition] = true;
-                        OnQuestConditionChanged?.Invoke();
+                    // Sets the condition to true
+                    ongoingQuest.MarkCondition(dialogueID, true);
 
-                        Debug.Log("Dialogue Match!");
-                    }
+                    OnQuestConditionChanged?.Invoke();
+                    Debug.Log("Dialogue Match!");
                 }
             }
         }
@@ -135,8 +132,7 @@ namespace QuestSystem
 
                             if (Input.GetKeyDown(key))
                             {
-                                string questText = GetQuestObjectiveDescription(condition);
-                                ongoingQuest.completedQuestConditions[questText] = true;
+                                ongoingQuest.MarkCondition(condition.ConditionValue, true);
                                 OnQuestConditionChanged?.Invoke();
                                // questConditionsUI.CompleteQuestPoint(questText);
                             }
@@ -150,7 +146,7 @@ namespace QuestSystem
                             {
                                 string questText = GetQuestObjectiveDescription(condition);
 
-                                ongoingQuest.completedQuestConditions[questText] = true;
+                                ongoingQuest.MarkCondition(condition.ConditionValue, true);
                                 OnQuestConditionChanged?.Invoke();
 
                                 //questConditionsUI.CompleteQuestPoint(questText);
@@ -159,24 +155,18 @@ namespace QuestSystem
                             // This condition might be 'disabled', so we need to re-update
                             else
                             {
-                                string questText = GetQuestObjectiveDescription(condition);
+                                ongoingQuest.MarkCondition(condition.ConditionValue, false);
+                                OnQuestConditionChanged?.Invoke();
 
-                                ongoingQuest.completedQuestConditions[questText] = false;
-
-                               // questConditionsUI.SetQuestPointUncomplete(questText);
+                                // questConditionsUI.SetQuestPointUncomplete(questText);
                             }
-
-                            break;
-
-                        case QuestCondition.ActivateNPCDialogueStep:
-
 
                             break;
                     }
                 }
 
                 // If the quest step is complete, move to the next step
-                if (ongoingQuest.IsQuestConditionComplete())
+                if (ongoingQuest.IsObjectiveComplete())
                 {
                     quest.IncreaseQuestStep();
 
@@ -205,9 +195,8 @@ namespace QuestSystem
                         {
                             Debug.Log("Dialogue Match!");
 
-                            string questText = GetQuestObjectiveDescription(condition);
+                            ongoingQuest.MarkCondition(condition.ConditionValue, true);
 
-                            ongoingQuest.completedQuestConditions[questText] = true;
                             OnQuestConditionChanged?.Invoke();
 
                             //questConditionsUI.CompleteQuestPoint(questText);
@@ -220,7 +209,7 @@ namespace QuestSystem
         private void SetupQuest(OngoingQuest ongoingQuest)
         {
             // Make a new dictionary to track the quest conditions
-            ongoingQuest.completedQuestConditions = new();
+            ongoingQuest.ReInitialize();
 
             foreach (QuestSystemQuestConditionData condition in ongoingQuest.quest.objective.Conditions)
             {
@@ -228,9 +217,14 @@ namespace QuestSystem
 
                 string questText = GetQuestObjectiveDescription(condition);
 
-                // questConditionsUI.AddQuestPoint(questText);
+                QuestConditionData newConditionData = new()
+                {                  
+                    ConditionVariable = condition.ConditionValue,
+                    ConditionDisplayName = questText,
+                    CompletionStatus = false
+                };
 
-                ongoingQuest.completedQuestConditions.Add(questText, false);
+                ongoingQuest.AddQuestCondition(newConditionData);
             }
 
             // Subscribe to the quest's completion event
@@ -287,7 +281,7 @@ namespace QuestSystem
                         return $"Error, NPC Dialogue Step not found!";
                     }
 
-                    return condition.ConditionValue.ToString();
+                    return $"Talk to NPC";
 
                 default:
                     break;

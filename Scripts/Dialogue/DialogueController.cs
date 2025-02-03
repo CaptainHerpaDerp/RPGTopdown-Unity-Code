@@ -271,68 +271,73 @@ namespace DialogueSystem
                 yield return new WaitUntil(() => Input.GetKeyUp(KeyCode.Space) || (Time.time - startTime >= maxWaitTime));
             }
 
-            switch (currentDialogue.EventType)
+            foreach (var eventTrigger in currentDialogue.EventTriggers)
             {
-                // Starts a quest if the current dialogue's Dialogue Event is a Quest and the associated object is a quest object
-                case DialogueSystemDiagEvent.StartQuest:
-                    if (currentDialogue.AssociatedObject is Quest)
-                    {
-                        // Get the quest from the associated object
-                        Quest quest = currentDialogue.AssociatedObject as Quest;
-                        questCompletionTracker.AddQuest(quest);                     
-                    }
+                switch (eventTrigger.TriggerType)
+                {
+                    // Starts a quest if the current dialogue's Dialogue Event is a Quest and the associated object is a quest object
+                    case DialogueSystemDiagEvent.StartQuest:
+                        if (eventTrigger.TriggerValue is Quest)
+                        {
+                            // Get the quest from the associated object
+                            Quest quest = eventTrigger.TriggerValue as Quest;
+                            questCompletionTracker.AddQuest(quest);
+                        }
 
-                    break;
-
-                case DialogueSystemDiagEvent.ShopOpen:
-                    if (currentDialogue.AssociatedObject is ShopData)
-                    {
-                        shop.OpenShop(currentDialogue.AssociatedObject as ShopData);
-                        CloseDialogue(false);
-                        yield break;
-                    }
-                    else
-                    {
-                        throw new System.Exception($"Associated object to dialogue {currentDialogue.name} is not a shop!");
-                    }
-
-                // Changes the dialogue's group if the current dialogue's Dialogue Event is a Set Group
-                case DialogueSystemDiagEvent.SetGroup:
-
-                    if (currentDialogueComponent.GetGroupOfName(currentDialogue.NextGroupName) == null)
-                    {
-                        throw new System.Exception("The next dialogue group doesn't exist!");
-                    }
-
-                    currentDialogueComponent.dialogueGroup = currentDialogueComponent.GetGroupOfName(currentDialogue.NextGroupName);
-
-                    break;
-
-                // Removes the specified item from the player's inventory
-                case DialogueSystemDiagEvent.RemovePlayerItem:
-
-                    if (string.IsNullOrEmpty(currentDialogue.ItemId))
-                    {
-                        Debug.LogWarning("Error removing a player's item in the dialogue controller, the provided item id is null or empty");
                         break;
-                    }
 
-                    GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+                    case DialogueSystemDiagEvent.ShopOpen:
+                        if (eventTrigger.TriggerValue is ShopData)
+                        {
+                            shop.OpenShop(eventTrigger.TriggerValue as ShopData);
+                            CloseDialogue(false);
+                            yield break;
+                        }
+                        else
+                        {
+                            throw new System.Exception($"Associated object to dialogue {currentDialogue.name} is not a shop!");
+                        }
 
-                    if (!playerObject.TryGetComponent(out Inventory playerInventory))
-                    {
-                        Debug.LogWarning("Error removing a player's item in the dialogue controller, player object doesn't' have an inventory");
-                    }
+                    // Changes the dialogue's group if the current dialogue's Dialogue Event is a Set Group
+                    case DialogueSystemDiagEvent.SetGroup:
 
-                    if (!playerInventory.ContainsItemByName(currentDialogue.ItemId))
-                    {
-                        Debug.LogWarning("Error removing a player's item in the dialogue controller, the item doesn't exist in the player's inventory");
-                    }
+                        if (currentDialogueComponent.GetGroupOfName(eventTrigger.TriggerValue as string) == null)
+                        {
+                            throw new System.Exception("The next dialogue group doesn't exist!");
+                        }
 
-                    // Remove
-                    playerInventory.RemoveItemByID(currentDialogue.ItemId);
+                        currentDialogueComponent.dialogueGroup = currentDialogueComponent.GetGroupOfName(eventTrigger.TriggerValue as string);
 
-                    break;
+                        break;
+
+                    // Removes the specified item from the player's inventory
+                    case DialogueSystemDiagEvent.RemovePlayerItem:
+
+                        string itemId = eventTrigger.TriggerValue as string;
+
+                        if (string.IsNullOrEmpty(itemId))
+                        {
+                            Debug.LogWarning("Error removing a player's item in the dialogue controller, the provided item id is null or empty");
+                            break;
+                        }
+
+                        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+
+                        if (!playerObject.TryGetComponent(out Inventory playerInventory))
+                        {
+                            Debug.LogWarning("Error removing a player's item in the dialogue controller, player object doesn't' have an inventory");
+                        }
+
+                        if (!playerInventory.ContainsItemByName(itemId))
+                        {
+                            Debug.LogWarning("Error removing a player's item in the dialogue controller, the item doesn't exist in the player's inventory");
+                        }
+
+                        // Remove
+                        playerInventory.RemoveItemByID(itemId);
+
+                        break;
+                }
             }
 
             yield return new WaitForEndOfFrame();

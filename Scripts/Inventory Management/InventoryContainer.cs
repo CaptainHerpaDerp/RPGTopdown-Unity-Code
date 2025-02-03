@@ -162,6 +162,9 @@ namespace InventoryManagement
         {
             foreach (var entry in inventoryEntries)
             {
+                if (entry == null)
+                    continue;
+
                 if (entry.item.itemName == itemSearch)
                 {
                     return true;

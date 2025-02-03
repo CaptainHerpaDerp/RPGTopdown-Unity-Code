@@ -175,14 +175,14 @@ namespace UIWindows
                 }
 
                 // Iterate through each of the conditions of the tracked quest and create a new quest objective for each
-                foreach (var condition in trackedQuest.completedQuestConditions)
+                foreach (var condition in trackedQuest.QuestConditions)
                 {
                     QuestObjective newQuestObjective = Instantiate(questObjectivePrefab, parent: questObjectivesParentTransform);
 
                     string questName = trackedQuest.quest.QuestName;
 
-                    newQuestObjective.ObjectiveText = condition.Key.ToString();
-                    newQuestObjective.SetObjectiveComplete(condition.Value);
+                    newQuestObjective.ObjectiveText = condition.ConditionDisplayName;
+                    newQuestObjective.SetObjectiveComplete(condition.CompletionStatus);
                 }
             }
         }

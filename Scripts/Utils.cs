@@ -1,30 +1,20 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 
-namespace Utils
+public static class Utils
 {
-    public class UtilsClass : MonoBehaviour
+    public static bool CollidersOverlap(BoxCollider boxCollider1, BoxCollider boxCollider2)
     {
-        public static Vector3 GetMouseWorldPosition()
+        if (boxCollider1 == null || boxCollider2 == null)
         {
-            Vector3 vec = GetMouseWorldPositionWithZ(Input.mousePosition, Camera.main);
-            vec.z = 0f;
-            return vec;
+            return false;
         }
-        public static Vector3 GetMouseWorldPositionWithZ()
-        {
-            return GetMouseWorldPositionWithZ(Input.mousePosition, Camera.main);
-        }
-        public static Vector3 GetMouseWorldPositionWithZ(Camera worldCamera)
-        {
-            return GetMouseWorldPositionWithZ(Input.mousePosition, worldCamera);
-        }
-        public static Vector3 GetMouseWorldPositionWithZ(Vector3 screenPosition, Camera worldCamera)
-        {
-            Vector3 worldPosition = worldCamera.ScreenToWorldPoint(screenPosition);
-            return worldPosition;
-        }
+
+        // Get the bounds of each BoxCollider
+        Bounds bounds1 = boxCollider1.bounds;
+        Bounds bounds2 = boxCollider2.bounds;
+
+        // Check for overlap between the bounds
+        return Physics.ComputePenetration(boxCollider1, boxCollider1.transform.position, boxCollider1.transform.rotation, boxCollider2, boxCollider2.transform.position, boxCollider2.transform.rotation, out _, out _);
     }
 }
-

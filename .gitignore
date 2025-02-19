@@ -4,6 +4,7 @@
 # Allow the Scripts folder and its contents
 !Scripts/
 !Scripts/**
+Scripts/Dialogue/AIDialogueController.cs
 
 # Ignore meta files outside the Scripts folder
 *.meta
